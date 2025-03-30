@@ -1,7 +1,12 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using YoutubeDLSharp;
 using YoutubeDLSharp.Metadata;
+using static System.Windows.Forms.Design.AxImporter;
+using YoutubeDLSharp.Options;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace YLYL_Download
@@ -10,12 +15,17 @@ namespace YLYL_Download
     {
         DataGridView URLsdata;
         bool ready = false;
+        YoutubeDL ytdl = new YoutubeDL();
         public MainForm()
         {
             InitializeComponent();
             URLsdata = this.URLs;
             readyStatus.Text = ready.ToString();
-            
+            pathLabelValue.Text = System.IO.Directory.GetCurrentDirectory() + "\\Downloads\\";
+            ytdl.SetMaxNumberOfProcesses((byte)Environment.ProcessorCount);
+
+
+
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -27,6 +37,50 @@ namespace YLYL_Download
         {
 
         }
+        public static void GenerateVlcPlaylist(string directory)
+        {
+            // Specify the top 20 video file extensions
+            var videoExtensions = new[] {
+            ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm",
+            ".mpg", ".mpeg", ".3gp", ".ogv", ".m4v", ".ts", ".f4v",
+            ".rm", ".rmvb", ".vob", ".gifv", ".iso", ".mxf"
+        };
+
+            // Get all video files in the directory
+            var videoFiles = Directory.GetFiles(directory)
+                                      .Where(file => videoExtensions.Contains(Path.GetExtension(file).ToLower()))
+                                      .ToList();
+
+            if (videoFiles.Count == 0)
+            {
+                MessageBox.Show("No video files found in the directory.");
+                return;
+            }
+
+            // Define the output playlist file path (xspf format)
+            string outputPlaylist = Path.Combine(directory, "output_playlist.xspf");
+
+            // Create a VLC XSPF playlist manually
+            try
+            {
+                XDocument xspf = new XDocument(
+                    new XElement("playlist",
+                        new XAttribute("version", "1"),
+                        new XElement("trackList",
+                            videoFiles.Select(file =>
+                                new XElement("track",
+                                    new XElement("location", $"file:///{file}"))))));
+
+                // Save the XSPF file to the specified location
+                xspf.Save(outputPlaylist);
+                MessageBox.Show($"VLC playlist (.xspf) created successfully: {outputPlaylist}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error creating VLC playlist: {ex.Message}");
+            }
+        }
+
         private async void updateYTDLP_Click(object sender, EventArgs e)
         {
             await YoutubeDLSharp.Utils.DownloadYtDlp();
@@ -81,28 +135,64 @@ namespace YLYL_Download
         {
             if (ready)
             {
-                var ytdl = new YoutubeDL();
                 var urls = GetFirstCellValues();
-                foreach (string url in urls)
-                {
-                    var res = await ytdl.RunVideoDataFetch(url);
-                    // get some video information
-                    VideoData video = res.Data;
-                    string title = video.Title;
-                    string uploader = video.Uploader;
-                    long? views = video.ViewCount;
-                    var dgr = FindRowByFirstCellValue(url);
 
-                    UpdateColumnValue(dgr, 3, title);
-                    UpdateColumnValue(dgr, 4, uploader);
-                    UpdateColumnValue(dgr, 5, views);
-                    
-                    UpdateColumnValue(dgr, 6, "Not Started");
-                    string commaSeparatedString = string.Join(",", res.ErrorOutput);
-                    UpdateColumnValue(dgr, 7, commaSeparatedString);
-                }
-                
+                // Create tasks for all video data fetch operations
+                var tasks = urls.Select(async url =>
+                {
+                    try
+                    {
+                        // Fetch video data asynchronously
+
+                        if (url.Contains("playlist?"))
+                        {
+                                    
+
+                        } else
+                        {
+                            var res = await ytdl.RunVideoDataFetch(url);
+
+                            // Get video information
+                            VideoData video = res.Data;
+                            string title = video.Title;
+                            string uploader = video.Uploader;
+                            long? views = video.ViewCount;
+
+                            // Find the row corresponding to the URL
+                            var dgr = FindRowByFirstCellValue(url);
+
+                            if (dgr != null)
+                            {
+                                // Update columns with video data safely on the UI thread
+                                this.Invoke(new Action(() =>
+                                {
+                                    UpdateColumnValue(dgr, 3, title); // Column 3: Title
+                                    UpdateColumnValue(dgr, 4, uploader); // Column 4: Uploader
+                                    UpdateColumnValue(dgr, 5, views); // Column 5: Views
+                                    UpdateColumnValue(dgr, 6, "Not Started"); // Column 6: Status
+                                    string commaSeparatedString = string.Join(",", res.ErrorOutput);
+                                    UpdateColumnValue(dgr, 7, commaSeparatedString); // Column 7: Errors
+                                }));
+                            }
+                        }
+                            
+                    }
+                    catch (Exception ex)
+                    {
+                        // Handle exceptions for each URL individually
+                        MessageBox.Show($"Error reading file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }).ToArray();
+
+                // Wait for all tasks to complete
+                await Task.WhenAll(tasks);
             }
+        }
+        private async void setOutputButton_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog dialog = new FolderBrowserDialog();
+            dialog.ShowDialog();
+            pathLabelValue.Text = dialog.SelectedPath;
         }
         private void generateCommand_Click(object sender, EventArgs e)
         {
@@ -111,6 +201,7 @@ namespace YLYL_Download
                 if (!row.IsNewRow) // Avoid the last empty row used for new entries
                 {
                     string rowData = "";
+                    
                     foreach (DataGridViewCell cell in row.Cells)
                     {
                         rowData += cell.Value?.ToString() + " | "; // Concatenating values with a separator
@@ -123,30 +214,88 @@ namespace YLYL_Download
                    
                 }
             }
-            ready = true;
+            
             readyStatus.Text = ready.ToString();
             getData();
+            ready = true;
         }
         private async void executeButton_Click(object sender, EventArgs e)
         {
             if (ready)
             {
-                var ytdl = new YoutubeDL();
-                ytdl.OutputFolder = System.IO.Directory.GetCurrentDirectory() + "\\Downloads\\";
+                ytdl.OutputFolder = pathLabelValue.Text;
                 var urls = GetFirstCellValues();
-                foreach (string url in urls)
-                {
-                    var dgr = FindRowByFirstCellValue(url);
-                    var progress = new Progress<DownloadProgress>(p => UpdateColumnValue(dgr, 6, p.Progress));
-                    var cts = new CancellationTokenSource();
-                    var res = await ytdl.RunVideoDownload(url, progress: progress, ct: cts.Token);
-                    
-                    string commaSeparatedString = string.Join(",", res.ErrorOutput);
-                    UpdateColumnValue(dgr, 7, commaSeparatedString);
-                }
+                
+                // Create a cancellation token source (optional, if you need to cancel the operation)
+                var cts = new CancellationTokenSource();
 
+                // Create tasks to run downloads in parallel
+                var tasks = urls.Select(async (url, index) =>
+                {
+                    try
+                    {
+                        var dgr = FindRowByFirstCellValue(url); // Find the row using the URL
+
+                        if (dgr != null)
+                        {
+                            //string customFileName = $"video{index + 1}.webm";  // video1.webm, video2.webm, etc.
+                            //string outputFilePath = Path.Combine(ytdl.OutputFolder, customFileName);
+
+                            // Create a progress instance and pass the URL to update progress
+                            var progress = new Progress<DownloadProgress>(p =>
+                            {
+                                // Only update progress if it's within the expected range
+                                if (p.Progress >= 0 && p.Progress <= 100)
+                                {
+                                    // Update progress safely on the UI thread
+                                    this.Invoke(new Action(() =>
+                                    {
+                                        UpdateColumnValue(dgr, 6, p.Progress * 100); // Update progress column (e.g., 6)
+                                    }));
+                                }
+                            });
+
+                            // Run the video download task asynchronously with the custom filename
+
+                            var options = new OptionSet()
+                            {
+                                RestrictFilenames = true
+                            };
+                            //recodeFormat: VideoRecodeFormat.Mp4 outputFilePath
+                            var res = await ytdl.RunVideoDownload(url, progress: progress, ct: cts.Token,  overrideOptions: options);
+                            
+                            // Convert error output to comma-separated string
+                            string commaSeparatedString = string.Join(",", res.ErrorOutput);
+
+                            // Update the DataGridView with the results
+                            this.Invoke(new Action(() =>
+                            {
+                                UpdateColumnValue(dgr, 7, commaSeparatedString); // Update error output column (e.g., 7)
+                            }));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Handle errors if necessary (logging, error display, etc.)
+                        MessageBox.Show($"Error reading file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }).ToArray();
+
+                // Wait for all download tasks to complete
+                await Task.WhenAll(tasks);
+
+                // Generate playlist if checked
+                if (generatePlaylist.Checked)
+                {
+                    GenerateVlcPlaylist(pathLabelValue.Text);
+                }
             }
         }
+
+
+
+
+
         private async void loadList_Click(object sender, EventArgs e)
         {
             using OpenFileDialog openFileDialog = new OpenFileDialog

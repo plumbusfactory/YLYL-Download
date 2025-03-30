@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             ButtonBackground = new Panel();
+            utilGroup = new GroupBox();
+            setOutputButton = new Button();
             updateYTDLP = new Button();
             executeButton = new Button();
             generateCommand = new Button();
@@ -37,13 +39,18 @@
             URLs = new DataGridView();
             readyLabel = new Label();
             readyStatus = new Label();
+            pathLabel = new Label();
+            pathLabelValue = new Label();
+            generatePlaylist = new CheckBox();
             ButtonBackground.SuspendLayout();
+            utilGroup.SuspendLayout();
             dlList.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)URLs).BeginInit();
             SuspendLayout();
             // 
             // ButtonBackground
             // 
+            ButtonBackground.Controls.Add(utilGroup);
             ButtonBackground.Controls.Add(updateYTDLP);
             ButtonBackground.Controls.Add(executeButton);
             ButtonBackground.Controls.Add(generateCommand);
@@ -53,6 +60,27 @@
             ButtonBackground.Name = "ButtonBackground";
             ButtonBackground.Size = new Size(1489, 859);
             ButtonBackground.TabIndex = 0;
+            // 
+            // utilGroup
+            // 
+            utilGroup.Controls.Add(generatePlaylist);
+            utilGroup.Controls.Add(setOutputButton);
+            utilGroup.Location = new Point(414, 3);
+            utilGroup.Name = "utilGroup";
+            utilGroup.Size = new Size(255, 57);
+            utilGroup.TabIndex = 6;
+            utilGroup.TabStop = false;
+            utilGroup.Text = "Utils";
+            // 
+            // setOutputButton
+            // 
+            setOutputButton.Location = new Point(6, 22);
+            setOutputButton.Name = "setOutputButton";
+            setOutputButton.Size = new Size(90, 26);
+            setOutputButton.TabIndex = 1;
+            setOutputButton.Text = "Set Output";
+            setOutputButton.UseVisualStyleBackColor = true;
+            setOutputButton.Click += setOutputButton_Click;
             // 
             // updateYTDLP
             // 
@@ -72,6 +100,7 @@
             executeButton.TabIndex = 2;
             executeButton.Text = "Execute list";
             executeButton.UseVisualStyleBackColor = true;
+            executeButton.Click += executeButton_Click;
             // 
             // generateCommand
             // 
@@ -128,11 +157,40 @@
             readyStatus.Size = new Size(0, 15);
             readyStatus.TabIndex = 2;
             // 
+            // pathLabel
+            // 
+            pathLabel.AutoSize = true;
+            pathLabel.Location = new Point(152, 877);
+            pathLabel.Name = "pathLabel";
+            pathLabel.Size = new Size(37, 15);
+            pathLabel.TabIndex = 3;
+            pathLabel.Text = "Path: ";
+            // 
+            // pathLabelValue
+            // 
+            pathLabelValue.AutoSize = true;
+            pathLabelValue.Location = new Point(195, 877);
+            pathLabelValue.Name = "pathLabelValue";
+            pathLabelValue.Size = new Size(0, 15);
+            pathLabelValue.TabIndex = 4;
+            // 
+            // generatePlaylist
+            // 
+            generatePlaylist.AutoSize = true;
+            generatePlaylist.Location = new Point(102, 24);
+            generatePlaylist.Name = "generatePlaylist";
+            generatePlaylist.Size = new Size(95, 19);
+            generatePlaylist.TabIndex = 2;
+            generatePlaylist.Text = "Make Playlist";
+            generatePlaylist.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1513, 897);
+            Controls.Add(pathLabelValue);
+            Controls.Add(pathLabel);
             Controls.Add(readyStatus);
             Controls.Add(readyLabel);
             Controls.Add(ButtonBackground);
@@ -140,6 +198,8 @@
             Text = "YLYL Downloader";
             Load += Form1_Load;
             ButtonBackground.ResumeLayout(false);
+            utilGroup.ResumeLayout(false);
+            utilGroup.PerformLayout();
             dlList.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)URLs).EndInit();
             ResumeLayout(false);
@@ -157,5 +217,10 @@
         private DataGridView URLs;
         private Label readyLabel;
         private Label readyStatus;
+        private Label pathLabel;
+        private Label pathLabelValue;
+        private GroupBox utilGroup;
+        private Button setOutputButton;
+        private CheckBox generatePlaylist;
     }
 }
