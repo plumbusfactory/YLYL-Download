@@ -225,7 +225,6 @@
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "MainForm";
             Text = "GrittyEnergys's YLYL Downloader";
-            Load += Form1_Load;
             ButtonBackground.ResumeLayout(false);
             utilGroup.ResumeLayout(false);
             utilGroup.PerformLayout();

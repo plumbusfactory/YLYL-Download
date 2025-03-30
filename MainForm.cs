@@ -64,7 +64,6 @@ namespace YLYL_Download
                     await Utils.DownloadYtDlp();
                     await Utils.DownloadFFmpeg();
 
-
                 }
                 else
                 {
@@ -77,11 +76,7 @@ namespace YLYL_Download
                 MessageBox.Show($@"Error reading file: {ex.Message}", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
-        }
-
+        
         private static void GenerateVlcPlaylist(string directory)
         {
             // Specify the top 20 video file extensions
