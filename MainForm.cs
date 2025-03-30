@@ -117,6 +117,7 @@ namespace YLYL_Download
 
                 // Start the process with administrator privileges
                 Process.Start(startInfo);
+                Environment.Exit(0);
             }
             catch (Exception ex)
             {
