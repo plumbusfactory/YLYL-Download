@@ -30,6 +30,9 @@
         {
             ButtonBackground = new Panel();
             utilGroup = new GroupBox();
+            browserList = new ComboBox();
+            useCookies = new CheckBox();
+            generatePlaylist = new CheckBox();
             setOutputButton = new Button();
             updateYTDLP = new Button();
             executeButton = new Button();
@@ -41,7 +44,6 @@
             readyStatus = new Label();
             pathLabel = new Label();
             pathLabelValue = new Label();
-            generatePlaylist = new CheckBox();
             ButtonBackground.SuspendLayout();
             utilGroup.SuspendLayout();
             dlList.SuspendLayout();
@@ -63,14 +65,47 @@
             // 
             // utilGroup
             // 
+            utilGroup.Controls.Add(browserList);
+            utilGroup.Controls.Add(useCookies);
             utilGroup.Controls.Add(generatePlaylist);
             utilGroup.Controls.Add(setOutputButton);
             utilGroup.Location = new Point(414, 3);
             utilGroup.Name = "utilGroup";
-            utilGroup.Size = new Size(255, 57);
+            utilGroup.Size = new Size(322, 61);
             utilGroup.TabIndex = 6;
             utilGroup.TabStop = false;
             utilGroup.Text = "Utils";
+            // 
+            // browserList
+            // 
+            browserList.FormattingEnabled = true;
+            browserList.Items.AddRange(new object[] { "Firefox", "Chrome", "Edge" });
+            browserList.Location = new Point(195, 32);
+            browserList.Name = "browserList";
+            browserList.Size = new Size(112, 23);
+            browserList.TabIndex = 4;
+            // 
+            // useCookies
+            // 
+            useCookies.AutoSize = true;
+            useCookies.Location = new Point(102, 32);
+            useCookies.Name = "useCookies";
+            useCookies.Size = new Size(90, 19);
+            useCookies.TabIndex = 3;
+            useCookies.Text = "Use Cookies";
+            useCookies.UseVisualStyleBackColor = true;
+            useCookies.CheckedChanged += useCookies_CheckedChanged;
+            // 
+            // generatePlaylist
+            // 
+            generatePlaylist.AutoSize = true;
+            generatePlaylist.Location = new Point(102, 13);
+            generatePlaylist.Name = "generatePlaylist";
+            generatePlaylist.Size = new Size(95, 19);
+            generatePlaylist.TabIndex = 2;
+            generatePlaylist.Text = "Make Playlist";
+            generatePlaylist.UseVisualStyleBackColor = true;
+            generatePlaylist.CheckedChanged += generatePlaylist_CheckedChanged;
             // 
             // setOutputButton
             // 
@@ -174,16 +209,6 @@
             pathLabelValue.Size = new Size(0, 15);
             pathLabelValue.TabIndex = 4;
             // 
-            // generatePlaylist
-            // 
-            generatePlaylist.AutoSize = true;
-            generatePlaylist.Location = new Point(102, 24);
-            generatePlaylist.Name = "generatePlaylist";
-            generatePlaylist.Size = new Size(95, 19);
-            generatePlaylist.TabIndex = 2;
-            generatePlaylist.Text = "Make Playlist";
-            generatePlaylist.UseVisualStyleBackColor = true;
-            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -222,5 +247,7 @@
         private GroupBox utilGroup;
         private Button setOutputButton;
         private CheckBox generatePlaylist;
+        private CheckBox useCookies;
+        private ComboBox browserList;
     }
 }
