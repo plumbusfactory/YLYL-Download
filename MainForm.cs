@@ -1,13 +1,7 @@
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml.Linq;
 using YoutubeDLSharp;
 using YoutubeDLSharp.Metadata;
-using static System.Windows.Forms.Design.AxImporter;
 using YoutubeDLSharp.Options;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.Collections.ObjectModel;
 
 namespace YLYL_Download
@@ -15,31 +9,30 @@ namespace YLYL_Download
     public partial class MainForm : Form
     {
         private readonly DataGridView _urLsdata;
-        private bool _ready = false;
-        private readonly YoutubeDL _ytdl = new YoutubeDL();
+        private bool _ready;
+        private readonly YoutubeDL _ytdl = new();
         public MainForm()
         {
             InitializeComponent();
-            _urLsdata = this.URLs;
+            _urLsdata = URLs;
             readyStatus.Text = _ready.ToString();
-            pathLabelValue.Text = System.IO.Directory.GetCurrentDirectory() + @"\Downloads\";
+            pathLabelValue.Text = Directory.GetCurrentDirectory() + @"\Downloads\";
             _ytdl.SetMaxNumberOfProcesses((byte)Environment.ProcessorCount);
             browserList.SelectedIndex = 0;
             CheckForExecutables();
-            
 
         }
 
         private static async Task<string[]> GetVidcount(string url)
         {
-            Collection<string> linesRet = new Collection<string>();
+            Collection<string> linesRet = [];
             var ytdlProc = new YoutubeDLProcess();
             // capture the standard output and error output
-            ytdlProc.OutputReceived += (o, e) =>
+            ytdlProc.OutputReceived += (_, e) =>
             {
                 if (e.Data != null) linesRet.Add(e.Data);
             };
-            ytdlProc.ErrorReceived += (o, e) => Console.WriteLine(@"ERROR: " + e.Data);
+            ytdlProc.ErrorReceived += (_, e) => Console.WriteLine(@"ERROR: " + e.Data);
             // start running
             string[] urls = [url];
             var options = new OptionSet()
@@ -52,44 +45,44 @@ namespace YLYL_Download
             await ytdlProc.RunAsync(urls, options);
             return linesRet.ToArray();
         }
-        static async void CheckForExecutables()
+
+        private static async void CheckForExecutables()
         {
-            // Get the current working directory
-            string workingDir;
-            workingDir = Directory.GetCurrentDirectory();
-
-            // Define the file names to check
-            string[] filesToCheck = { "yt-dlp.exe", "ffmpeg.exe" };
-
-            // Check for missing files
-            var missingFiles = (from file in filesToCheck let filePath = Path.Combine(workingDir, file) where !File.Exists(filePath) select file).ToList();
-
-            if (missingFiles.Count <= 0) return;
-            // Show a dialog with options
-            var message = "The following files are missing:\n" + string.Join("\n", missingFiles) + "\nWould you like to download them now or close the program?";
-            var result = MessageBox.Show(message, @"Missing Dependencies", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-
-            if (result == DialogResult.Yes)
+            try
             {
-                // Open a URL to download the missing dependencies (example URL)
-                await YoutubeDLSharp.Utils.DownloadYtDlp();
-                await YoutubeDLSharp.Utils.DownloadFFmpeg();
+                // Get the current working directory
+                var workingDir = Directory.GetCurrentDirectory();
+                string[] filesToCheck = ["yt-dlp.exe", "ffmpeg.exe"];
+                var missingFiles = (from file in filesToCheck let filePath = Path.Combine(workingDir, file) where !File.Exists(filePath) select file).ToList();
+                if (missingFiles.Count <= 0) return;
+                var message = "The following files are missing:\n" + string.Join("\n", missingFiles) + "\nWould you like to download them now or close the program?";
+                var result = MessageBox.Show(message, @"Missing Dependencies", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (result == DialogResult.Yes)
+                {
+                    // Open a URL to download the missing dependencies (example URL)
+                    await Utils.DownloadYtDlp();
+                    await Utils.DownloadFFmpeg();
 
 
+                }
+                else
+                {
+                    // Close the program
+                    Environment.Exit(0);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Close the program
-                Environment.Exit(0);
+                MessageBox.Show($@"Error reading file: {ex.Message}", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
         }
         private void Form1_Load(object sender, EventArgs e)
         {
 
         }
 
-        public static void GenerateVlcPlaylist(string directory)
+        private static void GenerateVlcPlaylist(string directory)
         {
             // Specify the top 20 video file extensions
             var videoExtensions = new[] {
@@ -138,38 +131,29 @@ namespace YLYL_Download
 
         private async void updateYTDLP_Click(object sender, EventArgs e)
         {
-            await YoutubeDLSharp.Utils.DownloadYtDlp();
-            await YoutubeDLSharp.Utils.DownloadFFmpeg();
+            try
+            {
+                await Utils.DownloadYtDlp();
+                await Utils.DownloadFFmpeg();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($@"Error reading file: {ex.Message}", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         private List<string> GetFirstCellValues()
         {
-            List<string> firstCellValues = new List<string>();
-
-            foreach (DataGridViewRow row in _urLsdata.Rows)
-            {
-                if (!row.IsNewRow) // Skip the new row placeholder
-                {
-                    var firstCellValue = row.Cells[0].Value?.ToString(); // Get the first column's value
-                    if (firstCellValue != null)
-                    {
-                        firstCellValues.Add(firstCellValue);
-                    }
-                }
-            }
-
-            return firstCellValues;
+            return (from DataGridViewRow row in _urLsdata.Rows where !row.IsNewRow select row.Cells[0].Value?.ToString()).OfType<string>().ToList();
         }
         private DataGridViewRow? FindRowByFirstCellValue(string searchValue)
         {
             foreach (DataGridViewRow row in _urLsdata.Rows)
             {
-                if (!row.IsNewRow) // Skip the new row placeholder
+                if (row.IsNewRow) continue; // Skip the new row placeholder
+                var firstCellValue = row.Cells[0].Value?.ToString();
+                if (firstCellValue != null && firstCellValue.Equals(searchValue, StringComparison.OrdinalIgnoreCase))
                 {
-                    var firstCellValue = row.Cells[0].Value?.ToString();
-                    if (firstCellValue != null && firstCellValue.Equals(searchValue, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return row; // Return the matching row
-                    }
+                    return row; // Return the matching row
                 }
             }
             return null; // Return null if no match is found
@@ -188,102 +172,109 @@ namespace YLYL_Download
 
         private async void GetData()
         {
-            if (!_ready) return;
-            var urls = GetFirstCellValues();
-
-            // Create tasks for all video data fetch operations
-            var tasks = urls.Select(async url =>
+            try
             {
-                try
+                if (!_ready) return;
+                var urls = GetFirstCellValues();
+
+                // Create tasks for all video data fetch operations
+                var tasks = urls.Select(async url =>
                 {
-                    // Fetch video data asynchronously
-                    RunResult<VideoData> resp;
-                    if (url.Contains("playlist?"))
+                    try
                     {
-                        if (useCookies.Checked)
+                        // Fetch video data asynchronously
+                        RunResult<VideoData> resp;
+                        if (url.Contains("playlist?"))
                         {
-                            var options = new OptionSet
+                            if (useCookies.Checked)
                             {
-                                RestrictFilenames = true,
-                                CookiesFromBrowser = browserList.SelectedItem?.ToString()
-                            };
-                            resp = await _ytdl.RunVideoDataFetch(url,overrideOptions: options);
-                        } else
-                        {
-                            resp = await _ytdl.RunVideoDataFetch(url);
-                        }
-
-                        var dgr = FindRowByFirstCellValue(url);
-
-                        if (dgr != null)
-                        {
-                            // Update columns with video data safely on the UI thread
-                            Invoke(() =>
+                                var options = new OptionSet
+                                {
+                                    RestrictFilenames = true,
+                                    CookiesFromBrowser = browserList.SelectedItem?.ToString()
+                                };
+                                resp = await _ytdl.RunVideoDataFetch(url,overrideOptions: options);
+                            } else
                             {
-                                UpdateColumnValue(dgr, 3, "Playlist"); // Column 3: Title
-                                UpdateColumnValue(dgr, 4, "Playlist"); // Column 4: Uploader
-                                UpdateColumnValue(dgr, 5, -1); // Column 5: Views
-                                UpdateColumnValue(dgr, 6, "Not Started"); // Column 6: Status
-                                var commaSeparatedString = string.Join(",", resp.ErrorOutput);
-                                UpdateColumnValue(dgr, 7, commaSeparatedString); // Column 7: Errors
-                            });
-                        }
+                                resp = await _ytdl.RunVideoDataFetch(url);
+                            }
 
-                    }
-                    else
-                    {
-                        RunResult<VideoData> res;
-                        if (useCookies.Checked)
-                        {
-                            var options = new OptionSet
+                            var dgr = FindRowByFirstCellValue(url);
+
+                            if (dgr != null)
                             {
-                                RestrictFilenames = true,
-                                CookiesFromBrowser = browserList.SelectedItem?.ToString()
-                            };
-                            res = await _ytdl.RunVideoDataFetch(url, overrideOptions: options);
+                                // Update columns with video data safely on the UI thread
+                                Invoke(() =>
+                                {
+                                    UpdateColumnValue(dgr, 3, "Playlist"); // Column 3: Title
+                                    UpdateColumnValue(dgr, 4, "Playlist"); // Column 4: Uploader
+                                    UpdateColumnValue(dgr, 5, -1); // Column 5: Views
+                                    UpdateColumnValue(dgr, 6, "Not Started"); // Column 6: Status
+                                    var commaSeparatedString = string.Join(",", resp.ErrorOutput);
+                                    UpdateColumnValue(dgr, 7, commaSeparatedString); // Column 7: Errors
+                                });
+                            }
+
                         }
                         else
                         {
-                            res = await _ytdl.RunVideoDataFetch(url);
-                        }
+                            RunResult<VideoData> res;
+                            if (useCookies.Checked)
+                            {
+                                var options = new OptionSet
+                                {
+                                    RestrictFilenames = true,
+                                    CookiesFromBrowser = browserList.SelectedItem?.ToString()
+                                };
+                                res = await _ytdl.RunVideoDataFetch(url, overrideOptions: options);
+                            }
+                            else
+                            {
+                                res = await _ytdl.RunVideoDataFetch(url);
+                            }
 
                             
-                        // Get video information
-                        var video = res.Data;
-                        var title = video?.Title;
-                        var uploader = video?.Uploader;
-                        var views = video?.ViewCount;
+                            // Get video information
+                            var video = res.Data;
+                            var title = video?.Title;
+                            var uploader = video?.Uploader;
+                            var views = video?.ViewCount;
 
-                        // Find the row corresponding to the URL
-                        var dgr = FindRowByFirstCellValue(url);
+                            // Find the row corresponding to the URL
+                            var dgr = FindRowByFirstCellValue(url);
 
-                        if (dgr != null)
-                        {
-                            // Update columns with video data safely on the UI thread
-                            Invoke(() =>
+                            if (dgr != null)
                             {
-                                if (title != null) UpdateColumnValue(dgr, 3, title); // Column 3: Title
-                                if (uploader != null) UpdateColumnValue(dgr, 4, uploader); // Column 4: Uploader
-                                if (views != null) UpdateColumnValue(dgr, 5, views); // Column 5: Views
-                                UpdateColumnValue(dgr, 6, "Not Started"); // Column 6: Status
-                                var commaSeparatedString = string.Join(",", res.ErrorOutput);
-                                UpdateColumnValue(dgr, 7, commaSeparatedString); // Column 7: Errors
-                            });
+                                // Update columns with video data safely on the UI thread
+                                Invoke(() =>
+                                {
+                                    if (title != null) UpdateColumnValue(dgr, 3, title); // Column 3: Title
+                                    if (uploader != null) UpdateColumnValue(dgr, 4, uploader); // Column 4: Uploader
+                                    if (views != null) UpdateColumnValue(dgr, 5, views); // Column 5: Views
+                                    UpdateColumnValue(dgr, 6, "Not Started"); // Column 6: Status
+                                    var commaSeparatedString = string.Join(",", res.ErrorOutput);
+                                    UpdateColumnValue(dgr, 7, commaSeparatedString); // Column 7: Errors
+                                });
+                            }
                         }
+
                     }
+                    catch (Exception ex)
+                    {
+                        // Handle exceptions for each URL individually
+                        MessageBox.Show($@"Error reading file: {ex.Message}", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }).ToArray();
 
-                }
-                catch (Exception ex)
-                {
-                    // Handle exceptions for each URL individually
-                    MessageBox.Show($@"Error reading file: {ex.Message}", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }).ToArray();
-
-            // Wait for all tasks to complete
-            await Task.WhenAll(tasks);
-            _ready = true;
-            readyStatus.Text = true.ToString();
+                // Wait for all tasks to complete
+                await Task.WhenAll(tasks);
+                _ready = true;
+                readyStatus.Text = true.ToString();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($@"Error reading file: {ex.Message}", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         private void setOutputButton_Click(object sender, EventArgs e)
         {
@@ -295,30 +286,27 @@ namespace YLYL_Download
         {
             foreach (DataGridViewRow? row in _urLsdata.Rows)
             {
-                if (!row.IsNewRow) // Avoid the last empty row used for new entries
+                if (row is not { IsNewRow: false }) continue; // Avoid the last empty row used for new entries
+                var rowData = "";
+
+                foreach (DataGridViewCell cell in row.Cells)
                 {
-                    var rowData = "";
-
-                    foreach (DataGridViewCell cell in row.Cells)
+                    rowData += cell.Value + " | "; // Concatenating values with a separator
+                    if (rowData.Contains("youtube.com"))
                     {
-                        rowData += cell.Value?.ToString() + " | "; // Concatenating values with a separator
-                        if (rowData.Contains("youtube.com"))
-                        {
-                            UpdateColumnValue(row, 1, "Youtube");
-                            UpdateColumnValue(row, 2, "No");
-                        }
-                        if (rowData.Contains("instagram.com"))
-                        {
-                            UpdateColumnValue(row, 1, "Insta");
-                            UpdateColumnValue(row, 2, "Maybe");
-                        }
-                        if (rowData.Contains("tiktok.com"))
-                        {
-                            UpdateColumnValue(row, 1, "TikTok");
-                            UpdateColumnValue(row, 2, "No");
-                        }
+                        UpdateColumnValue(row, 1, "Youtube");
+                        UpdateColumnValue(row, 2, "No");
                     }
-
+                    if (rowData.Contains("instagram.com"))
+                    {
+                        UpdateColumnValue(row, 1, "Insta");
+                        UpdateColumnValue(row, 2, "Maybe");
+                    }
+                    if (rowData.Contains("tiktok.com"))
+                    {
+                        UpdateColumnValue(row, 1, "TikTok");
+                        UpdateColumnValue(row, 2, "No");
+                    }
                 }
             }
 
@@ -330,113 +318,116 @@ namespace YLYL_Download
         }
         private async void executeButton_Click(object sender, EventArgs e)
         {
-            if (!_ready) return;
-            _ytdl.OutputFolder = pathLabelValue.Text;
-            var urls = GetFirstCellValues();
-
-            // Create a cancellation token source (optional, if you need to cancel the operation)
-            var cts = new CancellationTokenSource();
-
-            // Create tasks to run downloads in parallel
-            var tasks = urls.Select(async (url, index) =>
+            try
             {
-                try
+                if (!_ready) return;
+                _ytdl.OutputFolder = pathLabelValue.Text;
+                var urls = GetFirstCellValues();
+
+                // Create a cancellation token source (optional, if you need to cancel the operation)
+                var cts = new CancellationTokenSource();
+
+                // Create tasks to run downloads in parallel
+                var tasks = urls.Select(async (url, _) =>
                 {
-                    var dgr = FindRowByFirstCellValue(url); // Find the row using the URL
-
-                    if (dgr != null)
+                    try
                     {
-                        //string customFileName = $"video{index + 1}.webm";  // video1.webm, video2.webm, etc.
-                        //string outputFilePath = Path.Combine(ytdl.OutputFolder, customFileName);
+                        var dgr = FindRowByFirstCellValue(url); // Find the row using the URL
 
-                        // Create a progress instance and pass the URL to update progress
-                        var progress = new Progress<DownloadProgress>(p =>
+                        if (dgr != null)
                         {
-                            // Only update progress if it's within the expected range
-                            if (p.Progress is >= 0 and <= 100)
+                            //string customFileName = $"video{index + 1}.webm";  // video1.webm, video2.webm, etc.
+                            //string outputFilePath = Path.Combine(ytdl.OutputFolder, customFileName);
+
+                            // Create a progress instance and pass the URL to update progress
+                            var progress = new Progress<DownloadProgress>(p =>
                             {
-                                // Update progress safely on the UI thread
+                                // Only update progress if it's within the expected range
+                                if (p.Progress is >= 0 and <= 100)
+                                {
+                                    // Update progress safely on the UI thread
+                                    this.Invoke(() =>
+                                    {
+                                        if (p.State.ToString() == "Success")
+                                        {
+                                            UpdateColumnValue(dgr, 6, 100);
+                                        } else
+                                        {
+                                            UpdateColumnValue(dgr, 6, p.Progress * 100); // Update progress column (e.g., 6)
+                                        }
+                                            
+                                    });
+
+                                }
+                            });
+
+                            // Run the video download task asynchronously with the custom filename
+
+                            OptionSet options;
+                            
+                            if (useCookies.Checked)
+                            {
+                                
+                                options = new OptionSet()
+                                {
+                                    RestrictFilenames = true,
+                                    CookiesFromBrowser = browserList.SelectedItem?.ToString()
+                                };
+                            } else
+                            {
+                                options = new OptionSet()
+                                {
+                                    RestrictFilenames = true
+                                };
+                            }
+                            //recodeFormat: VideoRecodeFormat.Mp4 outputFilePath
+                            if (url.Contains("playlist?"))
+                            {
+                                var res = await _ytdl.RunVideoPlaylistDownload(url, progress: progress, ct: cts.Token, overrideOptions: options);
+                                var commaSeparatedString = string.Join(",", res.ErrorOutput);
                                 this.Invoke(() =>
                                 {
-                                    if (p.State.ToString() == "Success")
-                                    {
-                                        UpdateColumnValue(dgr, 6, 100);
-                                    } else
-                                    {
-                                        UpdateColumnValue(dgr, 6, p.Progress * 100); // Update progress column (e.g., 6)
-                                    }
-                                            
+                                    UpdateColumnValue(dgr, 7, commaSeparatedString); // Update error output column (e.g., 7)
                                 });
 
                             }
-                        });
+                            else
+                            {
+                                var res = await _ytdl.RunVideoDownload(url, progress: progress, ct: cts.Token, overrideOptions: options);
+                                var commaSeparatedString = string.Join(",", res.ErrorOutput);
+                                this.Invoke(() =>
+                                {
+                                    UpdateColumnValue(dgr, 7, commaSeparatedString); // Update error output column (e.g., 7)
+                                });
+                            }
 
-                        // Run the video download task asynchronously with the custom filename
 
-                        OptionSet options;
-                        //new OptionSet()
-                        //{
-                        //    RestrictFilenames = true
-                        //}
-                        ;
-                        if (useCookies.Checked)
-                        {
-                                
-                            options = new OptionSet()
-                            {
-                                RestrictFilenames = true,
-                                CookiesFromBrowser = browserList.SelectedItem?.ToString()
-                            };
-                        } else
-                        {
-                            options = new OptionSet()
-                            {
-                                RestrictFilenames = true
-                            };
-                        }
-                        //recodeFormat: VideoRecodeFormat.Mp4 outputFilePath
-                        if (url.Contains("playlist?"))
-                        {
-                            var res = await _ytdl.RunVideoPlaylistDownload(url, progress: progress, ct: cts.Token, overrideOptions: options);
-                            var commaSeparatedString = string.Join(",", res.ErrorOutput);
-                            this.Invoke(new Action(() =>
-                            {
-                                UpdateColumnValue(dgr, 7, commaSeparatedString); // Update error output column (e.g., 7)
-                            }));
+                            // Convert error output to comma-separated string
+
+
+                            // Update the DataGridView with the results
 
                         }
-                        else
-                        {
-                            var res = await _ytdl.RunVideoDownload(url, progress: progress, ct: cts.Token, overrideOptions: options);
-                            var commaSeparatedString = string.Join(",", res.ErrorOutput);
-                            this.Invoke(new Action(() =>
-                            {
-                                UpdateColumnValue(dgr, 7, commaSeparatedString); // Update error output column (e.g., 7)
-                            }));
-                        }
-
-
-                        // Convert error output to comma-separated string
-
-
-                        // Update the DataGridView with the results
-
                     }
-                }
-                catch (Exception ex)
+                    catch (Exception ex)
+                    {
+                        // Handle errors if necessary (logging, error display, etc.)
+                        MessageBox.Show($@"Error reading file: {ex.Message}", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }).ToArray();
+
+                // Wait for all download tasks to complete
+                await Task.WhenAll(tasks);
+
+                // Generate playlist if checked
+                if (generatePlaylist.Checked)
                 {
-                    // Handle errors if necessary (logging, error display, etc.)
-                    MessageBox.Show($@"Error reading file: {ex.Message}", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    GenerateVlcPlaylist(pathLabelValue.Text);
                 }
-            }).ToArray();
-
-            // Wait for all download tasks to complete
-            await Task.WhenAll(tasks);
-
-            // Generate playlist if checked
-            if (generatePlaylist.Checked)
+            }
+            catch (Exception ex)
             {
-                GenerateVlcPlaylist(pathLabelValue.Text);
+                MessageBox.Show($@"Error reading file: {ex.Message}", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -446,41 +437,48 @@ namespace YLYL_Download
 
         private async void loadList_Click(object sender, EventArgs e)
         {
-            using var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = @"Text Files (*.txt)|*.txt|All Files (*.*)|*.*";
-            openFileDialog.Title = @"Select a Text File";
-
-            if (openFileDialog.ShowDialog() != DialogResult.OK) return;
-            var filePath = openFileDialog.FileName;
-
             try
             {
-                // Clear the DataGridView
-                _urLsdata.Columns.Clear();
-                _urLsdata.Rows.Clear();
+                using var openFileDialog = new OpenFileDialog();
+                openFileDialog.Filter = @"Text Files (*.txt)|*.txt|All Files (*.*)|*.*";
+                openFileDialog.Title = @"Select a Text File";
 
-                // Read all lines from the file asynchronously
-                var lines = await File.ReadAllLinesAsync(filePath);
+                if (openFileDialog.ShowDialog() != DialogResult.OK) return;
+                var filePath = openFileDialog.FileName;
 
-                if (lines.Length <= 0) return;
-                // Assuming the first line contains column headers
-
-                _urLsdata.Columns.Add("URL", "URL");
-                _urLsdata.Columns.Add("Source", "Source");
-                _urLsdata.Columns.Add("Cookies Needed", "Cookies Needed");
-                _urLsdata.Columns.Add("Title", "Title");
-                _urLsdata.Columns.Add("Uploader", "Uploader");
-                _urLsdata.Columns.Add("Views", "Views");
-
-                _urLsdata.Columns.Add("Progress", "Progress");
-                _urLsdata.Columns.Add("Errors", "Errors");
-                _urLsdata.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
-                _urLsdata.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-                // Add remaining lines as rows
-                foreach (var line in lines.Skip(1))
+                try
                 {
-                    var cells = line.Split('\t'); // Split by tabs
-                    _urLsdata.Rows.Add(cells);
+                    // Clear the DataGridView
+                    _urLsdata.Columns.Clear();
+                    _urLsdata.Rows.Clear();
+
+                    // Read all lines from the file asynchronously
+                    var lines = await File.ReadAllLinesAsync(filePath);
+
+                    if (lines.Length <= 0) return;
+                    // Assuming the first line contains column headers
+
+                    _urLsdata.Columns.Add("URL", "URL");
+                    _urLsdata.Columns.Add("Source", "Source");
+                    _urLsdata.Columns.Add("Cookies Needed", "Cookies Needed");
+                    _urLsdata.Columns.Add("Title", "Title");
+                    _urLsdata.Columns.Add("Uploader", "Uploader");
+                    _urLsdata.Columns.Add("Views", "Views");
+
+                    _urLsdata.Columns.Add("Progress", "Progress");
+                    _urLsdata.Columns.Add("Errors", "Errors");
+                    _urLsdata.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+                    _urLsdata.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+                    // Add remaining lines as rows
+                    foreach (var line in lines.Skip(1))
+                    {
+                        var cells = line.Split('\t'); // Split by tabs
+                        _urLsdata.Rows.Add(cells);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($@"Error reading file: {ex.Message}", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
