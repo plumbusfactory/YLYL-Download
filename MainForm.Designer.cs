@@ -173,6 +173,8 @@
             URLs.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             URLs.Location = new Point(6, 22);
             URLs.Name = "URLs";
+            URLs.ReadOnly = true;
+            URLs.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.AutoSizeToFirstHeader;
             URLs.Size = new Size(1475, 771);
             URLs.TabIndex = 0;
             // 

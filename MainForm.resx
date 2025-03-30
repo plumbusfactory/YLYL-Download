@@ -194,4 +194,13 @@
         AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
 </value>
   </data>
+  <data name="MainForm_useCookies_CheckedChanged_Privacy_Warning" xml:space="preserve">
+    <value>Privacy Warning</value>
+  </data>
+  <data name="MainForm_loadList_Click_Text_Files____txt____txt_All_Files__________" xml:space="preserve">
+    <value>Text Files (*.txt)|*.txt|All Files (*.*)|*.*</value>
+  </data>
+  <data name="MainForm_loadList_Click_Select_a_Text_File" xml:space="preserve">
+    <value>Select a Text File</value>
+  </data>
 </root>
