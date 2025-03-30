@@ -20,6 +20,8 @@ namespace YLYL_Download
             _ytdl.SetMaxNumberOfProcesses((byte)Environment.ProcessorCount);
             browserList.SelectedIndex = 0;
             CheckForExecutables();
+            generateCommand.Enabled = false;
+            executeButton.Enabled = false;
 
         }
 
@@ -309,6 +311,7 @@ namespace YLYL_Download
             _ready = true;
             readyStatus.Text = true.ToString();
             GetData();
+            executeButton.Enabled = true;
 
         }
         private async void executeButton_Click(object sender, EventArgs e)
@@ -470,6 +473,7 @@ namespace YLYL_Download
                         var cells = line.Split('\t'); // Split by tabs
                         _urLsdata.Rows.Add(cells);
                     }
+                    generateCommand.Enabled = true;
                 }
                 catch (Exception ex)
                 {
