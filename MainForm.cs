@@ -52,15 +52,15 @@ namespace YLYL_Download
         {
             try
             {
-                using (var fs = File.Create(
+                using (File.Create(
                            Path.Combine(
                                dirPath, 
                                Path.GetRandomFileName()
                            ), 
                            1,
-                           FileOptions.DeleteOnClose)
-                      )
+                           FileOptions.DeleteOnClose))
                 { }
+
                 return true;
             }
             catch
