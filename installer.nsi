@@ -16,7 +16,7 @@ Name "YLYL-Downloader"
 !define MUI_WELCOMEPAGE_TEXT "This wizard will guide you through the installation of YLYL-Downloader.\n\nClick Next to continue."
 !define MUI_FINISHPAGE_TITLE "Setup Completed"
 !define MUI_FINISHPAGE_TEXT "YLYL-Downloader Setup Wizard has been successfully installed on your computer.\n\nClick Finish to exit the Setup Wizard."
-!define MUI_FINISHPAGE_RUN "$INSTDIR\YLYL-Downloader.exe"   ; Launch application
+!define MUI_FINISHPAGE_RUN "$INSTDIR\YLYL-Download.exe"   ; Launch application
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
