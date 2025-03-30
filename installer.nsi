@@ -25,7 +25,23 @@ Name "YLYL-Downloader"
 
 # Reserve space for uninstaller
 !insertmacro MUI_UNPAGE_INSTFILES
+Page custom StartMenuPage
 
+# Variables
+Var StartMenuShortcut
+
+# Custom page function
+Function StartMenuPage
+    # Add a checkbox to the custom page to allow the user to choose if they want a Start Menu shortcut
+    nsDialogs::Create 1018
+    Pop $0  # Handle for the dialog
+
+    # Create the checkbox for Start Menu shortcut option
+    ${NSD_CreateCheckbox} 0 0u 100% 12u "Create Start Menu Shortcut"
+    Pop $StartMenuShortcut  # The result will be stored in this variable
+
+    nsDialogs::Show
+FunctionEnd
 # Sections define what the installer does
 Section "Install"
   # Create the installation directory
@@ -36,9 +52,14 @@ Section "Install"
 
   # Create uninstaller entry
   WriteUninstaller "$INSTDIR\Uninstall.exe"
-  WriteRegStr HKLM "Software\MyApp" "InstallDir" "$INSTDIR"
+  WriteRegStr HKLM "Software\YLYL-Downloader" "InstallDir" "$INSTDIR"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\YLYL-Downloader" "UninstallString" "$INSTDIR\Uninstall.exe"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\YLYL-Downloader" "DisplayName" "GrittyEnergy YLYL Downloader"
+  ${If} $StartMenuShortcut == 1
+          # Create a shortcut in the Start Menu
+          CreateDirectory "$SMPROGRAMS\YLYL-Downloader"
+          CreateShortCut "$SMPROGRAMS\YLYL-Downloader\YLYL-Downloader.lnk" "$INSTDIR\YLYL-Downloader.exe"
+      ${EndIf}
 SectionEnd
 
 Section "Uninstall"
@@ -49,4 +70,6 @@ Section "Uninstall"
   # Remove uninstaller entry
   DeleteRegKey HKLM "Software\YLYL-Downloader"
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\YLYL-Downloader"
+  Delete "$SMPROGRAMS\YLYL-Downloader\YLYL-Downloader.lnk"
+  RMDir "$SMPROGRAMS\YLYL-Downloader"
 SectionEnd
