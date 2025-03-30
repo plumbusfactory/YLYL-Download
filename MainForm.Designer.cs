@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             ButtonBackground = new Panel();
             utilGroup = new GroupBox();
             browserList = new ComboBox();
@@ -219,8 +220,9 @@
             Controls.Add(readyStatus);
             Controls.Add(readyLabel);
             Controls.Add(ButtonBackground);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "MainForm";
-            Text = "YLYL Downloader";
+            Text = "GrittyEnergys's YLYL Downloader";
             Load += Form1_Load;
             ButtonBackground.ResumeLayout(false);
             utilGroup.ResumeLayout(false);

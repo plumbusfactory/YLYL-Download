@@ -94,22 +94,19 @@ namespace YLYL_Download
 
         }
 
-        private void URLs_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
         public static void GenerateVlcPlaylist(string directory)
         {
             // Specify the top 20 video file extensions
             var videoExtensions = new[] {
-            ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm",
-            ".mpg", ".mpeg", ".3gp", ".ogv", ".m4v", ".ts", ".f4v",
-            ".rm", ".rmvb", ".vob", ".gifv", ".iso", ".mxf"
-        };
+        ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm",
+        ".mpg", ".mpeg", ".3gp", ".ogv", ".m4v", ".ts", ".f4v",
+        ".rm", ".rmvb", ".vob", ".gifv", ".iso", ".mxf"
+    };
 
             // Get all video files in the directory
             var videoFiles = Directory.GetFiles(directory)
                                       .Where(file => videoExtensions.Contains(Path.GetExtension(file).ToLower()))
+                                      .Select(file => Path.GetFileName(file)) // Use only the file name
                                       .ToList();
 
             if (videoFiles.Count == 0)
@@ -130,7 +127,9 @@ namespace YLYL_Download
                         new XElement("trackList",
                             videoFiles.Select(file =>
                                 new XElement("track",
-                                    new XElement("location", $"file:///{file}"))))));
+                                    new XElement("title", file),
+                                    new XElement("location", $"file:///{file}")))))
+                );
 
                 // Save the XSPF file to the specified location
                 xspf.Save(outputPlaylist);
@@ -141,6 +140,7 @@ namespace YLYL_Download
                 MessageBox.Show($"Error creating VLC playlist: {ex.Message}");
             }
         }
+
 
         private async void updateYTDLP_Click(object sender, EventArgs e)
         {
@@ -289,6 +289,8 @@ namespace YLYL_Download
 
                 // Wait for all tasks to complete
                 await Task.WhenAll(tasks);
+                ready = true;
+                readyStatus.Text = true.ToString();
             }
         }
         private void setOutputButton_Click(object sender, EventArgs e)
@@ -330,6 +332,7 @@ namespace YLYL_Download
 
             readyStatus.Text = ready.ToString();
             ready = true;
+            readyStatus.Text = true.ToString();
             getData();
 
         }
@@ -507,7 +510,7 @@ namespace YLYL_Download
 
         private void useCookies_CheckedChanged(object sender, EventArgs e)
         {
-            string message = "Warning, Enabling this will allow the underlying yt-dlp to read all cookies of the selected borser";
+            string message = "Warning, Enabling this will allow the underlying yt-dlp to read all cookies of the selected browser";
             DialogResult result = MessageBox.Show(message, "Privacy Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
 
             if (result == DialogResult.Yes)
