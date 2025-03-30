@@ -48,13 +48,36 @@ namespace YLYL_Download
             await ytdlProc.RunAsync(urls, options);
             return linesRet.ToArray();
         }
-
+        public static bool IsDirectoryWritable(string dirPath, bool throwIfFails = false)
+        {
+            try
+            {
+                using (var fs = File.Create(
+                           Path.Combine(
+                               dirPath, 
+                               Path.GetRandomFileName()
+                           ), 
+                           1,
+                           FileOptions.DeleteOnClose)
+                      )
+                { }
+                return true;
+            }
+            catch
+            {
+                if (throwIfFails)
+                    throw;
+                else
+                    return false;
+            }
+        }
         private static async void CheckForExecutables()
         {
             try
             {
                 // Get the current working directory
                 var workingDir = Directory.GetCurrentDirectory();
+                
                 string[] filesToCheck = ["yt-dlp.exe", "ffmpeg.exe"];
                 var missingFiles = (from file in filesToCheck let filePath = Path.Combine(workingDir, file) where !File.Exists(filePath) select file).ToList();
                 if (missingFiles.Count <= 0) return;
@@ -80,9 +103,6 @@ namespace YLYL_Download
                             return;
                         }
                     }
-
-                    
-
                 }
                 else
                 {
@@ -175,8 +195,7 @@ namespace YLYL_Download
         {
             try
             {
-                await Utils.DownloadYtDlp();
-                await Utils.DownloadFFmpeg();
+                CheckForExecutables();
             }
             catch (Exception ex)
             {
