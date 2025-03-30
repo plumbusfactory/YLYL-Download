@@ -3,6 +3,7 @@ using YoutubeDLSharp;
 using YoutubeDLSharp.Metadata;
 using YoutubeDLSharp.Options;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 namespace YLYL_Download
 {
@@ -63,8 +64,24 @@ namespace YLYL_Download
                 if (result == DialogResult.Yes)
                 {
                     // Open a URL to download the missing dependencies (example URL)
-                    await Utils.DownloadYtDlp();
-                    await Utils.DownloadFFmpeg();
+                    try
+                    {
+                        // Attempt to download YtDlp
+                        await Utils.DownloadYtDlp();
+                        await Utils.DownloadFFmpeg();
+                    }
+                    catch (Exception ex)
+                    {
+                        if (!IsUserAdministrator())
+                        {
+                            // If not, launch the application with administrator privileges
+                            MessageBox.Show(@"Admin permissions required");
+                            RestartAsAdmin();
+                            return;
+                        }
+                    }
+
+                    
 
                 }
                 else
@@ -78,7 +95,34 @@ namespace YLYL_Download
                 MessageBox.Show($@"Error reading file: {ex.Message}", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+        private static bool IsUserAdministrator()
+        {
+            // Check if the current user is an administrator
+            var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
+            var principal = new System.Security.Principal.WindowsPrincipal(identity);
+            return principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+        }
+
+        private static void RestartAsAdmin()
+        {
+            try
+            {
+                // Create a process start info with elevated privileges
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = Application.ExecutablePath,
+                    Verb = "runas", // This will trigger the UAC prompt
+                    UseShellExecute = true
+                };
+
+                // Start the process with administrator privileges
+                Process.Start(startInfo);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($@"Error starting with admin privileges: {ex.Message}");
+            }
+        }
         private static void GenerateVlcPlaylist(string directory)
         {
             // Specify the top 20 video file extensions
