@@ -32,6 +32,7 @@ namespace YLYL_Download
             pathLabelValue.Text = Directory.GetCurrentDirectory() + @"\Downloads\";
             _ytdl.SetMaxNumberOfProcesses((byte)Environment.ProcessorCount);
             browserList.SelectedIndex = 0;
+            remuxSelection.SelectedIndex = 0;
             CheckForExecutables();
             generateCommand.Enabled = false;
             executeButton.Enabled = false;
@@ -50,12 +51,12 @@ namespace YLYL_Download
             ytdlProc.ErrorReceived += (_, e) => Console.WriteLine(@"ERROR: " + e.Data);
             // start running
             string[] urls = [url];
-            var options = new OptionSet()
+            var options = new OptionSet
             {
                 NoContinue = true,
-                RestrictFilenames = true
+                RestrictFilenames = true,
+                FlatPlaylist = true
             };
-            options.FlatPlaylist = true;
             options.AddCustomOption<string>("--print", "url");
             await ytdlProc.RunAsync(urls, options);
             return linesRet.ToArray();
@@ -464,11 +465,23 @@ namespace YLYL_Download
                                     RestrictFilenames = true,
                                     CookiesFromBrowser = browserList.SelectedItem?.ToString()
                                 };
-                            } else
+                            } 
+                            else
                             {
                                 options = new OptionSet
                                 {
                                     RestrictFilenames = true
+                                };
+                            }
+
+                            if (remuxOutput.Checked)
+                            {
+                                options.RecodeVideo = remuxSelection.SelectedText switch
+                                {
+                                    "MP4" => VideoRecodeFormat.Mp4,
+                                    "WEBM" => VideoRecodeFormat.Webm,
+                                    "H265" => VideoRecodeFormat.Mkv,
+                                    _ => VideoRecodeFormat.Mp4
                                 };
                             }
                             //recodeFormat: VideoRecodeFormat.Mp4 outputFilePath

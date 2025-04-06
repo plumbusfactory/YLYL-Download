@@ -31,6 +31,9 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             ButtonBackground = new System.Windows.Forms.Panel();
             utilGroup = new System.Windows.Forms.GroupBox();
+            remuxSelection = new System.Windows.Forms.ComboBox();
+            remuxOutput = new System.Windows.Forms.CheckBox();
+            checkExists = new System.Windows.Forms.CheckBox();
             browserList = new System.Windows.Forms.ComboBox();
             useCookies = new System.Windows.Forms.CheckBox();
             generatePlaylist = new System.Windows.Forms.CheckBox();
@@ -68,22 +71,56 @@
             // 
             // utilGroup
             // 
+            utilGroup.Controls.Add(remuxSelection);
+            utilGroup.Controls.Add(remuxOutput);
+            utilGroup.Controls.Add(checkExists);
             utilGroup.Controls.Add(browserList);
             utilGroup.Controls.Add(useCookies);
             utilGroup.Controls.Add(generatePlaylist);
             utilGroup.Controls.Add(setOutputButton);
             utilGroup.Location = new System.Drawing.Point(414, 3);
             utilGroup.Name = "utilGroup";
-            utilGroup.Size = new System.Drawing.Size(322, 61);
+            utilGroup.Size = new System.Drawing.Size(515, 61);
             utilGroup.TabIndex = 6;
             utilGroup.TabStop = false;
             utilGroup.Text = "Utils";
+            // 
+            // remuxSelection
+            // 
+            remuxSelection.FormattingEnabled = true;
+            remuxSelection.Items.AddRange(new object[] { "MP4", "WEBM", "H265" });
+            remuxSelection.Location = new System.Drawing.Point(296, 38);
+            remuxSelection.Name = "remuxSelection";
+            remuxSelection.Size = new System.Drawing.Size(112, 23);
+            remuxSelection.TabIndex = 7;
+            // 
+            // remuxOutput
+            // 
+            remuxOutput.AutoSize = true;
+            remuxOutput.Location = new System.Drawing.Point(203, 38);
+            remuxOutput.Name = "remuxOutput";
+            remuxOutput.Size = new System.Drawing.Size(65, 19);
+            remuxOutput.TabIndex = 6;
+            remuxOutput.Text = "REMUX";
+            remuxOutput.UseVisualStyleBackColor = true;
+            // 
+            // checkExists
+            // 
+            checkExists.AutoSize = true;
+            checkExists.Checked = true;
+            checkExists.CheckState = System.Windows.Forms.CheckState.Checked;
+            checkExists.Location = new System.Drawing.Point(102, 32);
+            checkExists.Name = "checkExists";
+            checkExists.Size = new System.Drawing.Size(90, 19);
+            checkExists.TabIndex = 5;
+            checkExists.Text = "Check Exists";
+            checkExists.UseVisualStyleBackColor = true;
             // 
             // browserList
             // 
             browserList.FormattingEnabled = true;
             browserList.Items.AddRange(new object[] { "Firefox", "Chrome", "Edge" });
-            browserList.Location = new System.Drawing.Point(195, 32);
+            browserList.Location = new System.Drawing.Point(296, 13);
             browserList.Name = "browserList";
             browserList.Size = new System.Drawing.Size(112, 23);
             browserList.TabIndex = 4;
@@ -91,7 +128,7 @@
             // useCookies
             // 
             useCookies.AutoSize = true;
-            useCookies.Location = new System.Drawing.Point(102, 32);
+            useCookies.Location = new System.Drawing.Point(203, 13);
             useCookies.Name = "useCookies";
             useCookies.Size = new System.Drawing.Size(90, 19);
             useCookies.TabIndex = 3;
@@ -102,6 +139,8 @@
             // generatePlaylist
             // 
             generatePlaylist.AutoSize = true;
+            generatePlaylist.Checked = true;
+            generatePlaylist.CheckState = System.Windows.Forms.CheckState.Checked;
             generatePlaylist.Location = new System.Drawing.Point(102, 13);
             generatePlaylist.Name = "generatePlaylist";
             generatePlaylist.Size = new System.Drawing.Size(95, 19);
@@ -216,7 +255,7 @@
             pathLabelValue.Size = new System.Drawing.Size(0, 15);
             pathLabelValue.TabIndex = 4;
             // 
-            // label2
+            // totalCountLabel
             // 
             totalCountLabel.AutoSize = true;
             totalCountLabel.Location = new System.Drawing.Point(1341, 877);
@@ -225,14 +264,13 @@
             totalCountLabel.TabIndex = 6;
             totalCountLabel.Text = "Total Videos: ";
             // 
-            // label1
+            // totalCount
             // 
             totalCount.AutoSize = true;
             totalCount.Location = new System.Drawing.Point(1424, 877);
             totalCount.Name = "totalCount";
-            totalCount.Size = new System.Drawing.Size(77, 15);
+            totalCount.Size = new System.Drawing.Size(0, 15);
             totalCount.TabIndex = 7;
-            totalCount.Text = "";
             // 
             // MainForm
             // 
@@ -257,6 +295,10 @@
             PerformLayout();
         }
 
+        private System.Windows.Forms.CheckBox checkExists;
+        private System.Windows.Forms.CheckBox remuxOutput;
+        private System.Windows.Forms.ComboBox remuxSelection;
+
         private System.Windows.Forms.Label totalCount;
 
         private System.Windows.Forms.Label totalCountLabel;
@@ -274,10 +316,10 @@
         private Label readyStatus;
         private Label pathLabel;
         private Label pathLabelValue;
-        private GroupBox utilGroup;
+        private System.Windows.Forms.GroupBox utilGroup;
         private Button setOutputButton;
-        private CheckBox generatePlaylist;
-        private CheckBox useCookies;
-        private ComboBox browserList;
+        private System.Windows.Forms.CheckBox generatePlaylist;
+        private System.Windows.Forms.CheckBox useCookies;
+        private System.Windows.Forms.ComboBox browserList;
     }
 }
