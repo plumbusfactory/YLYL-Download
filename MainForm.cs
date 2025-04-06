@@ -11,6 +11,18 @@ namespace YLYL_Download
     {
         private readonly DataGridView _urLsdata;
         private bool _ready;
+        private int _totalVideos = 0;
+
+        private int TotalVideos
+        {
+            get => _totalVideos;
+            set
+            {
+                _totalVideos = value;
+                totalCount.Text = value.ToString();
+            }
+        }
+
         private readonly YoutubeDL _ytdl = new();
         public MainForm()
         {
@@ -43,7 +55,7 @@ namespace YLYL_Download
                 NoContinue = true,
                 RestrictFilenames = true
             };
-            options.AddCustomOption<string>("--flat-playlist", "");
+            options.FlatPlaylist = true;
             options.AddCustomOption<string>("--print", "url");
             await ytdlProc.RunAsync(urls, options);
             return linesRet.ToArray();
@@ -237,7 +249,8 @@ namespace YLYL_Download
             {
                 if (!_ready) return;
                 var urls = GetFirstCellValues();
-
+                TotalVideos = 0;
+                
                 // Create tasks for all video data fetch operations
                 var tasks = urls.Select(async url =>
                 {
@@ -254,6 +267,14 @@ namespace YLYL_Download
                                     RestrictFilenames = true,
                                     CookiesFromBrowser = browserList.SelectedItem?.ToString()
                                 };
+                                string[] vidcount = await GetVidcount(url);
+                                
+                                Invoke(() =>
+                                {
+                                    var temp = FindRowByFirstCellValue(url);
+                                    UpdateColumnValue(temp, 3, "Playlist with " + vidcount.Length + " Videos");
+                                });
+                                TotalVideos += vidcount.Length;
                                 resp = await _ytdl.RunVideoDataFetch(url,overrideOptions: options);
                             } else
                             {
@@ -261,21 +282,24 @@ namespace YLYL_Download
                             }
 
                             var dgr = FindRowByFirstCellValue(url);
-
+                            
                             if (dgr != null)
                             {
                                 // Update columns with video data safely on the UI thread
                                 Invoke(() =>
                                 {
-                                    UpdateColumnValue(dgr, 3, "Playlist"); // Column 3: Title
+                                    //UpdateColumnValue(dgr, 3, "Playlist"); // Column 3: Title
                                     UpdateColumnValue(dgr, 4, "Playlist"); // Column 4: Uploader
-                                    UpdateColumnValue(dgr, 5, -1); // Column 5: Views
+                                    //UpdateColumnValue(dgr, 5, -1); // Column 5: Views
                                     UpdateColumnValue(dgr, 6, "Not Started"); // Column 6: Status
                                     var commaSeparatedString = string.Join(",", resp.ErrorOutput);
-                                    UpdateColumnValue(dgr, 7, commaSeparatedString); // Column 7: Errors
+                                    if (!commaSeparatedString.Contains("Incomplete data received"))
+                                    {
+                                        UpdateColumnValue(dgr, 7, commaSeparatedString); 
+                                    }
                                 });
                             }
-
+    
                         }
                         else
                         {
@@ -294,13 +318,14 @@ namespace YLYL_Download
                                 res = await _ytdl.RunVideoDataFetch(url);
                             }
 
+                            TotalVideos += 1;
                             
                             // Get video information
                             var video = res.Data;
                             var title = video?.Title;
                             var uploader = video?.Uploader;
                             var views = video?.ViewCount;
-
+                            
                             // Find the row corresponding to the URL
                             var dgr = FindRowByFirstCellValue(url);
 
@@ -314,7 +339,11 @@ namespace YLYL_Download
                                     if (views != null) UpdateColumnValue(dgr, 5, views); // Column 5: Views
                                     UpdateColumnValue(dgr, 6, "Not Started"); // Column 6: Status
                                     var commaSeparatedString = string.Join(",", res.ErrorOutput);
-                                    UpdateColumnValue(dgr, 7, commaSeparatedString); // Column 7: Errors
+                                    if (!commaSeparatedString.Contains("Incomplete data received"))
+                                    {
+                                        UpdateColumnValue(dgr, 7, commaSeparatedString); 
+                                    }
+                                    
                                 });
                             }
                         }
@@ -408,14 +437,14 @@ namespace YLYL_Download
                                 if (p.Progress is >= 0 and <= 100)
                                 {
                                     // Update progress safely on the UI thread
-                                    this.Invoke(() =>
+                                    Invoke(() =>
                                     {
                                         if (p.State.ToString() == "Success")
                                         {
-                                            UpdateColumnValue(dgr, 6, 100);
+                                            UpdateColumnValue(dgr, 6, 100 + "%");
                                         } else
                                         {
-                                            UpdateColumnValue(dgr, 6, p.Progress * 100); // Update progress column (e.g., 6)
+                                            UpdateColumnValue(dgr, 6, p.Progress * 100 + "%"); // Update progress column (e.g., 6)
                                         }
                                             
                                     });
@@ -430,14 +459,14 @@ namespace YLYL_Download
                             if (useCookies.Checked)
                             {
                                 
-                                options = new OptionSet()
+                                options = new OptionSet
                                 {
                                     RestrictFilenames = true,
                                     CookiesFromBrowser = browserList.SelectedItem?.ToString()
                                 };
                             } else
                             {
-                                options = new OptionSet()
+                                options = new OptionSet
                                 {
                                     RestrictFilenames = true
                                 };
@@ -447,9 +476,12 @@ namespace YLYL_Download
                             {
                                 var res = await _ytdl.RunVideoPlaylistDownload(url, progress: progress, ct: cts.Token, overrideOptions: options);
                                 var commaSeparatedString = string.Join(",", res.ErrorOutput);
-                                this.Invoke(() =>
+                                Invoke(() =>
                                 {
-                                    UpdateColumnValue(dgr, 7, commaSeparatedString); // Update error output column (e.g., 7)
+                                    if (!commaSeparatedString.Contains("Incomplete data received"))
+                                    {
+                                        UpdateColumnValue(dgr, 7, commaSeparatedString); 
+                                    }
                                 });
 
                             }
@@ -457,9 +489,12 @@ namespace YLYL_Download
                             {
                                 var res = await _ytdl.RunVideoDownload(url, progress: progress, ct: cts.Token, overrideOptions: options);
                                 var commaSeparatedString = string.Join(",", res.ErrorOutput);
-                                this.Invoke(() =>
+                                Invoke(() =>
                                 {
-                                    UpdateColumnValue(dgr, 7, commaSeparatedString); // Update error output column (e.g., 7)
+                                    if (!commaSeparatedString.Contains("Incomplete data received"))
+                                    {
+                                        UpdateColumnValue(dgr, 7, commaSeparatedString); 
+                                    }
                                 });
                             }
 
@@ -563,5 +598,6 @@ namespace YLYL_Download
             // Open a URL to download the missing dependencies (example URL)
             useCookies.Checked = result == DialogResult.Yes;
         }
+        
     }
 }

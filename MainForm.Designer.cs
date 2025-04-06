@@ -45,6 +45,8 @@
             readyStatus = new System.Windows.Forms.Label();
             pathLabel = new System.Windows.Forms.Label();
             pathLabelValue = new System.Windows.Forms.Label();
+            totalCountLabel = new System.Windows.Forms.Label();
+            totalCount = new System.Windows.Forms.Label();
             ButtonBackground.SuspendLayout();
             utilGroup.SuspendLayout();
             dlList.SuspendLayout();
@@ -214,11 +216,31 @@
             pathLabelValue.Size = new System.Drawing.Size(0, 15);
             pathLabelValue.TabIndex = 4;
             // 
+            // label2
+            // 
+            totalCountLabel.AutoSize = true;
+            totalCountLabel.Location = new System.Drawing.Point(1341, 877);
+            totalCountLabel.Name = "totalCountLabel";
+            totalCountLabel.Size = new System.Drawing.Size(77, 15);
+            totalCountLabel.TabIndex = 6;
+            totalCountLabel.Text = "Total Videos: ";
+            // 
+            // label1
+            // 
+            totalCount.AutoSize = true;
+            totalCount.Location = new System.Drawing.Point(1424, 877);
+            totalCount.Name = "totalCount";
+            totalCount.Size = new System.Drawing.Size(77, 15);
+            totalCount.TabIndex = 7;
+            totalCount.Text = "";
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1513, 897);
+            Controls.Add(totalCount);
+            Controls.Add(totalCountLabel);
             Controls.Add(pathLabelValue);
             Controls.Add(pathLabel);
             Controls.Add(readyStatus);
@@ -234,6 +256,10 @@
             ResumeLayout(false);
             PerformLayout();
         }
+
+        private System.Windows.Forms.Label totalCount;
+
+        private System.Windows.Forms.Label totalCountLabel;
 
         #endregion
 

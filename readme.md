@@ -4,7 +4,7 @@ This tool allows for automated download and playlist creation for VLC. This solv
 
 # Installation
 
-To start you can run YLYL-Downloader.msi or you can download the .zip version and extract it to a folder
+To start you can run YLYL-Downloader.exe or you can download the .zip version and extract it to a folder
 
 # Troubleshooting
 
@@ -24,4 +24,5 @@ To get started you will need a text file with 1 url per line, it does not matter
 
 ## Credits
 https://github.com/Bluegrams/YoutubeDLSharp Library used for yt-dlp
-https://discord.com/invite/filian SnackersHQ Discord for the Idea and Icon.
+
+https://discord.gg/filian SnackersHQ Discord for the Idea and Icon.
